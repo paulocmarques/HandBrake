@@ -15,6 +15,7 @@ namespace HandBrakeWPF.Instance
     using System.Diagnostics;
     using System.IO;
     using System.Text;
+    using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -22,6 +23,7 @@ namespace HandBrakeWPF.Instance
     using HandBrake.Interop.Interop.Interfaces;
     using HandBrake.Interop.Interop.Json.Encode;
     using HandBrake.Interop.Interop.Json.State;
+    using HandBrake.Interop.Json;
     using HandBrake.Worker.Routing.Commands;
 
     using HandBrakeWPF.Instance.Model;
@@ -29,8 +31,6 @@ namespace HandBrakeWPF.Instance
     using HandBrakeWPF.Services.Interfaces;
     using HandBrakeWPF.Services.Logging.Interfaces;
     using HandBrakeWPF.Utilities;
-
-    using Newtonsoft.Json;
 
     using Timer = System.Timers.Timer;
 
@@ -63,17 +63,23 @@ namespace HandBrakeWPF.Instance
 
         public async void PauseEncode()
         {
-            await this.MakeHttpGetRequest("PauseEncode");
-            this.StopPollingProgress();
+            if (this.IsServerRunning())
+            {
+                await this.MakeHttpGetRequest("PauseEncode");
+                this.StopPollingProgress();
+            }
         }
 
         public async void ResumeEncode()
         {
-            await this.MakeHttpGetRequest("ResumeEncode");
-            this.MonitorEncodeProgress();
+            if (this.IsServerRunning())
+            {
+                await this.MakeHttpGetRequest("ResumeEncode");
+                this.MonitorEncodeProgress();
+            }
         }
 
-        public void StartEncode(JsonEncodeObject jobToStart)
+        public async void StartEncode(JsonEncodeObject jobToStart)
         {
             if (this.IsServerRunning())
             {
@@ -88,7 +94,10 @@ namespace HandBrakeWPF.Instance
 
         public async void StopEncode()
         {
-            await this.MakeHttpGetRequest("StopEncode");
+            if (this.IsServerRunning())
+            {
+                await this.MakeHttpGetRequest("StopEncode");
+            }
         }
 
         public JsonState GetEncodeProgress()
@@ -103,7 +112,7 @@ namespace HandBrakeWPF.Instance
 
             string statusJson = response.Result?.JsonResponse;
 
-            JsonState state = JsonConvert.DeserializeObject<JsonState>(statusJson);
+            JsonState state = JsonSerializer.Deserialize<JsonState>(statusJson, JsonSettings.Options);
             return state;
         }
 
@@ -269,7 +278,7 @@ namespace HandBrakeWPF.Instance
 
             string statusJson = response.JsonResponse;
 
-            JsonState state = JsonConvert.DeserializeObject<JsonState>(statusJson);
+            JsonState state = JsonSerializer.Deserialize<JsonState>(statusJson, JsonSettings.Options);
 
             TaskState taskState = state != null ? TaskState.FromRepositoryValue(state.State) : null;
 
@@ -328,9 +337,7 @@ namespace HandBrakeWPF.Instance
 
                 initCommand.LogFile = Path.Combine(initCommand.LogDirectory, string.Format("activity_log.worker.{0}.txt", GeneralUtilities.ProcessId));
 
-                JsonSerializerSettings settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
-
-                string job = JsonConvert.SerializeObject(new EncodeCommand { InitialiseCommand = initCommand, EncodeJob = jobToStart }, Formatting.None, settings);
+                string job = JsonSerializer.Serialize(new EncodeCommand { InitialiseCommand = initCommand, EncodeJob = jobToStart }, JsonSettings.Options);
 
                 var task = Task.Run(async () => await this.MakeHttpJsonPostRequest("StartEncode", job));
                 task.Wait();
