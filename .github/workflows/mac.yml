@@ -6,21 +6,11 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_12.2.app/Contents/Developer
 
 jobs:
-  handle_forks:
-    name: Forked Repo
-    runs-on: ubuntu-latest
-    if: github.repository != 'HandBrake/HandBrake'
-    steps:
-    - name: Print Warning
-      run: |
-        echo "Builds are disabled for forked repositories."
-
   build:
     name: Build on macOS
     runs-on: macos-11.0
-    if: github.repository == 'HandBrake/HandBrake'
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v2
 
     - name: Toolchain Cache
       id: mac-toolchain
@@ -39,8 +29,7 @@ jobs:
         git submodule update --init --recursive
         ./configure
         cd build
-        make ub
-        make pkg.create
+        make ub && make pkg.create
 
     - name: Upload Assets
       uses: actions/upload-artifact@v2
