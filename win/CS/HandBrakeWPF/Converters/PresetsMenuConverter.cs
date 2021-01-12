@@ -11,6 +11,7 @@ namespace HandBrakeWPF.Converters
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
     using System.Windows;
@@ -41,7 +42,20 @@ namespace HandBrakeWPF.Converters
                 return null;
             }
             
-            Dictionary<string, MenuItem> groupedMenu = new Dictionary<string, MenuItem>();
+            Dictionary<string, object> groupedMenu = new Dictionary<string, object>();
+
+            if (parameter != null && "true".Equals(parameter))
+            {
+                MenuItem presetManagerMenuItem = new MenuItem
+                                        {
+                                            Header = Resources.PresetManger_Title,
+                                            Tag = null,
+                                            Command = new OpenPresetManagerCommand()
+                                        };
+                groupedMenu.Add("hb_preset_manager", presetManagerMenuItem);
+                groupedMenu.Add("hb_menu_seperator", new Separator());
+            }
+
             foreach (IPresetObject item in presets)
             {
                 PresetDisplayCategory category = item as PresetDisplayCategory;
@@ -72,11 +86,11 @@ namespace HandBrakeWPF.Converters
             throw new NotImplementedException();
         }
 
-        private void ProcessPreset(Dictionary<string, MenuItem> groupedMenu, Preset preset)
+        private void ProcessPreset(Dictionary<string, object> groupedMenu, Preset preset)
         {
             if (groupedMenu.ContainsKey(preset.Category))
             {
-                MenuItem newMenuItem = new MenuItem { Header = preset.Name, Tag = preset, Command = new PresetMenuSelectCommand(preset), IsEnabled = !preset.IsPresetDisabled };
+                MenuItem newMenuItem = new MenuItem { Header = preset.Name, Tag = preset, Command = new PresetMenuSelectCommand(preset), IsEnabled = !preset.IsPresetDisabled, ToolTip = preset.Description };
 
                 if (preset.IsPresetDisabled)
                 {
@@ -89,14 +103,15 @@ namespace HandBrakeWPF.Converters
                     newMenuItem.FontSize = 14;
                 }
 
-                groupedMenu[preset.Category].Items.Add(newMenuItem);
+                MenuItem menu = groupedMenu[preset.Category] as MenuItem;
+                menu?.Items.Add(newMenuItem);
             }
             else
             {
                 MenuItem group = new MenuItem();
                 group.Header = preset.Category;
 
-                MenuItem newMenuItem = new MenuItem { Header = preset.Name, Tag = preset, Command = new PresetMenuSelectCommand(preset), IsEnabled = !preset.IsPresetDisabled };
+                MenuItem newMenuItem = new MenuItem { Header = preset.Name, Tag = preset, Command = new PresetMenuSelectCommand(preset), IsEnabled = !preset.IsPresetDisabled, ToolTip = preset.Description };
 
                 if (preset.IsPresetDisabled)
                 {
@@ -114,7 +129,7 @@ namespace HandBrakeWPF.Converters
             }
         }
 
-        private void ProcessCategory(Dictionary<string, MenuItem> groupedMenu, PresetDisplayCategory category)
+        private void ProcessCategory(Dictionary<string, object> groupedMenu, PresetDisplayCategory category)
         {
             foreach (Preset preset in category.Presets)
             {

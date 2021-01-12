@@ -1,6 +1,6 @@
 /* common.h
 
-   Copyright (c) 2003-2020 HandBrake Team
+   Copyright (c) 2003-2021 HandBrake Team
    This file is part of the HandBrake source code
    Homepage: <http://handbrake.fr/>.
    It may be used under the terms of the GNU General Public License v2.
@@ -370,6 +370,7 @@ void        hb_video_quality_get_limits(uint32_t codec, float *low, float *high,
 const char* hb_video_quality_get_name(uint32_t codec);
 int         hb_video_quality_is_supported(uint32_t codec);
 
+int                hb_video_encoder_is_supported(int encoder);
 int                hb_video_encoder_get_depth   (int encoder);
 const char* const* hb_video_encoder_get_presets (int encoder);
 const char* const* hb_video_encoder_get_tunes   (int encoder);

@@ -2166,7 +2166,7 @@ Induve hè accettatu, tutte e prerigature persunalizate seranu state impurtate.<
     <value>Una nova versione d’HandBrake hè dispunibule !</value>
   </data>
   <data name="About_Copyright" xml:space="preserve">
-    <value>Diritti di copia (C) 2003-2020 The HandBrake Team</value>
+    <value>Diritti di copia (C) 2003-2021 The HandBrake Team</value>
   </data>
   <data name="Options_LowBatteryLevel" xml:space="preserve">
     <value>Livellu di batteria debule :</value>
@@ -2356,10 +2356,7 @@ I campi sò limitati à :
 - Discrizzione longa</value>
   </data>
   <data name="String1" xml:space="preserve">
-    <value/>
-  </data>
-  <data name="PresetManagerView_DefaultPreset" xml:space="preserve">
-    <value>(Prerigatura predefinita)</value>
+    <value />
   </data>
   <data name="PresetService_CategoryAlreadyExists" xml:space="preserve">
     <value>U nome di categuria scrittu esiste dighjà. Ci vole à sceglie un nome sfarente.</value>
