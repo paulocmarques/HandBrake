@@ -962,6 +962,14 @@ static hb_buffer_t *copy_frame( hb_work_private_t *pv )
         out = hb_avframe_to_video_buffer(pv->frame, (AVRational){1,1});
     }
 
+    // Make sure every frame is tagged.
+    if (out->f.color_prim == HB_COLR_PRI_UNDEF || out->f.color_transfer == HB_COLR_TRA_UNDEF || out->f.color_matrix == HB_COLR_MAT_UNDEF)
+    {
+        out->f.color_prim = pv->title->color_prim;
+        out->f.color_transfer = pv->title->color_transfer;
+        out->f.color_matrix = pv->title->color_matrix;
+    }
+
     if (pv->frame->pts != AV_NOPTS_VALUE)
     {
         reordered = reordered_hash_rem(pv, pv->frame->pts);
@@ -1087,6 +1095,29 @@ static hb_buffer_t *copy_frame( hb_work_private_t *pv )
                 cc_buf->s.scr_sequence = out->s.scr_sequence;
             }
             cc_send_to_decoder(pv, cc_buf);
+        }
+    }
+
+    // Check for HDR mastering data
+    sd = av_frame_get_side_data(pv->frame, AV_FRAME_DATA_MASTERING_DISPLAY_METADATA);
+    if (sd != NULL)
+    {
+        if (!pv->job && pv->title && sd->size > 0)
+        {
+            AVMasteringDisplayMetadata *mastering = (AVMasteringDisplayMetadata *)sd->data;
+            pv->title->mastering = hb_mastering_ff_to_hb(*mastering);
+        }
+    }
+
+    // Check for HDR content light level data
+    sd = av_frame_get_side_data(pv->frame, AV_FRAME_DATA_CONTENT_LIGHT_LEVEL);
+    if (sd != NULL)
+    {
+        if (!pv->job && pv->title && sd->size > 0)
+        {
+            AVContentLightMetadata *coll = (AVContentLightMetadata *)sd->data;
+            pv->title->coll.max_cll = coll->MaxCLL;
+            pv->title->coll.max_fall = coll->MaxFALL;
         }
     }
 

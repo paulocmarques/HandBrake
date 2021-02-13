@@ -593,6 +593,28 @@ void hb_display_job_info(hb_job_t *job)
 
         hb_log("     + color profile: %d-%d-%d",
                job->color_prim, job->color_transfer, job->color_matrix);
+
+        if (job->color_transfer == HB_COLR_TRA_SMPTEST2084)
+        {
+            if (job->mastering.has_primaries || job->mastering.has_luminance)
+            {
+                hb_log("     + mastering display metadata: r(%5.4f,%5.4f) g(%5.4f,%5.4f) b(%5.4f %5.4f) wp(%5.4f, %5.4f) min_luminance=%f, max_luminance=%f",
+                       hb_q2d(job->mastering.display_primaries[0][0]),
+                       hb_q2d(job->mastering.display_primaries[0][1]),
+                       hb_q2d(job->mastering.display_primaries[1][0]),
+                       hb_q2d(job->mastering.display_primaries[1][1]),
+                       hb_q2d(job->mastering.display_primaries[2][0]),
+                       hb_q2d(job->mastering.display_primaries[2][1]),
+                       hb_q2d(job->mastering.white_point[0]), hb_q2d(job->mastering.white_point[1]),
+                       hb_q2d(job->mastering.min_luminance), hb_q2d(job->mastering.max_luminance));
+            }
+            if (job->coll.max_cll && job->coll.max_fall)
+            {
+                hb_log("     + content light level: max_cll=%u, max_fall=%u",
+                       job->coll.max_cll,
+                       job->coll.max_fall);
+            }
+        }
     }
 
     if (job->indepth_scan)
@@ -1483,6 +1505,9 @@ static void do_job(hb_job_t *job)
             i++;
         }
         job->pix_fmt = init.pix_fmt;
+        job->color_prim = init.color_prim;
+        job->color_transfer = init.color_transfer;
+        job->color_matrix = init.color_matrix;
         job->width = init.geometry.width;
         job->height = init.geometry.height;
         job->par = init.geometry.par;
@@ -1537,33 +1562,14 @@ static void do_job(hb_job_t *job)
     hb_reduce(&job->vrate.num, &job->vrate.den,
                job->vrate.num,  job->vrate.den);
 
-#if HB_PROJECT_FEATURE_QSV
-#if 0 // TODO: re-implement QSV zerocopy path
-    if (hb_qsv_decode_is_enabled(job) && (job->vcodec & HB_VCODEC_QSV_MASK))
+    job->fifo_mpeg2  = hb_fifo_init( FIFO_SMALL, FIFO_SMALL_WAKE );
+    job->fifo_raw    = hb_fifo_init( FIFO_SMALL, FIFO_SMALL_WAKE );
+    if (!job->indepth_scan)
     {
-        job->fifo_mpeg2  = hb_fifo_init( FIFO_MINI, FIFO_MINI_WAKE );
-        job->fifo_raw    = hb_fifo_init( FIFO_MINI, FIFO_MINI_WAKE );
-        if (!job->indepth_scan)
-        {
-            // When doing subtitle indepth scan, the pipeline ends at sync
-            job->fifo_sync   = hb_fifo_init( FIFO_MINI, FIFO_MINI_WAKE );
-            job->fifo_render = hb_fifo_init( FIFO_MINI, FIFO_MINI_WAKE );
-            job->fifo_mpeg4  = hb_fifo_init( FIFO_MINI, FIFO_MINI_WAKE );
-        }
-    }
-    else
-#endif // QSV zerocopy path
-#endif
-    {
-        job->fifo_mpeg2  = hb_fifo_init( FIFO_SMALL, FIFO_SMALL_WAKE );
-        job->fifo_raw    = hb_fifo_init( FIFO_SMALL, FIFO_SMALL_WAKE );
-        if (!job->indepth_scan)
-        {
-            // When doing subtitle indepth scan, the pipeline ends at sync
-            job->fifo_sync   = hb_fifo_init( FIFO_SMALL, FIFO_SMALL_WAKE );
-            job->fifo_render = NULL; // Attached to filter chain
-            job->fifo_mpeg4  = hb_fifo_init( FIFO_LARGE, FIFO_LARGE_WAKE );
-        }
+        // When doing subtitle indepth scan, the pipeline ends at sync
+        job->fifo_sync   = hb_fifo_init( FIFO_SMALL, FIFO_SMALL_WAKE );
+        job->fifo_render = NULL; // Attached to filter chain
+        job->fifo_mpeg4  = hb_fifo_init( FIFO_LARGE, FIFO_LARGE_WAKE );
     }
 
     result = sanitize_audio(job);

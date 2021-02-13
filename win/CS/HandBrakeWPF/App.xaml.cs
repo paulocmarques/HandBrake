@@ -30,6 +30,8 @@ namespace HandBrakeWPF
     using HandBrakeWPF.ViewModels;
     using HandBrakeWPF.ViewModels.Interfaces;
 
+    using Microsoft.Win32;
+
     using GeneralApplicationException = Exceptions.GeneralApplicationException;
 
     /// <summary>
@@ -119,12 +121,40 @@ namespace HandBrakeWPF
                 }
             }
 
-            bool useDarkTheme = userSettingService.GetUserSetting<bool>(UserSettingConstants.UseDarkTheme);
-            if (useDarkTheme && SystemInfo.IsWindows10())
+            DarkThemeMode useDarkTheme = (DarkThemeMode)userSettingService.GetUserSetting<int>(UserSettingConstants.DarkThemeMode);
+            if (SystemInfo.IsWindows10())
             {
-                ResourceDictionary darkTheme = new ResourceDictionary();
-                darkTheme.Source = new Uri("Themes/Dark.xaml", UriKind.Relative);
-                Application.Current.Resources.MergedDictionaries.Add(darkTheme);
+                ResourceDictionary theme = new ResourceDictionary();
+                switch (useDarkTheme)
+                {
+                    case DarkThemeMode.System:
+                        if (SystemInfo.IsAppsUsingDarkTheme())
+                        {
+                            theme.Source = new Uri("Themes/Dark.xaml", UriKind.Relative);
+                            Application.Current.Resources.MergedDictionaries.Add(theme);
+                        }
+                        else if (!SystemParameters.HighContrast)
+                        {
+                            theme.Source = new Uri("Themes/Light.xaml", UriKind.Relative);
+                            Application.Current.Resources.MergedDictionaries.Add(theme);
+                        }
+                        break;
+                    case DarkThemeMode.Dark:
+                        theme.Source = new Uri("Themes/Dark.xaml", UriKind.Relative);
+                        Application.Current.Resources.MergedDictionaries.Add(theme);
+                        break;
+                    case DarkThemeMode.Light:
+                        if (!SystemParameters.HighContrast)
+                        {
+                            theme.Source = new Uri("Themes/Light.xaml", UriKind.Relative);
+                            Application.Current.Resources.MergedDictionaries.Add(theme);
+                        }
+
+                        break;
+
+                    default:
+                        break;
+                }
             }
 
             // NO-Hardware Mode

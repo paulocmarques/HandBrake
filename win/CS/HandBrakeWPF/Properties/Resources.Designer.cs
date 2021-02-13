@@ -853,6 +853,33 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use Dark.
+        /// </summary>
+        public static string DarkTheme_dark {
+            get {
+                return ResourceManager.GetString("DarkTheme_dark", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use Light.
+        /// </summary>
+        public static string DarkTheme_light {
+            get {
+                return ResourceManager.GetString("DarkTheme_light", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Match System.
+        /// </summary>
+        public static string DarkTheme_system {
+            get {
+                return ResourceManager.GetString("DarkTheme_system", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Create Folder?.
         /// </summary>
         public static string DirectoryUtils_CreateFolder {
@@ -940,6 +967,24 @@ namespace HandBrakeWPF.Properties {
         public static string FileOverwriteBehaviours_Overwrite {
             get {
                 return ResourceManager.GetString("FileOverwriteBehaviours_Overwrite", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chroma Smooth:.
+        /// </summary>
+        public static string FiltersView_ChromaSmooth {
+            get {
+                return ResourceManager.GetString("FiltersView_ChromaSmooth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Colourspace:.
+        /// </summary>
+        public static string FiltersView_ColourSpace {
+            get {
+                return ResourceManager.GetString("FiltersView_ColourSpace", resourceCulture);
             }
         }
         
@@ -1291,17 +1336,6 @@ namespace HandBrakeWPF.Properties {
         public static string Main_AlreadyEncoding {
             get {
                 return ResourceManager.GetString("Main_AlreadyEncoding", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: If you wish to have subtitles added to each item you are about to queue, please verify that you have the subtitle defaults setup correctly on the subtitles tab.
-        ///    
-        ///Do you wish to continue?.
-        /// </summary>
-        public static string Main_AutoAdd_AudioAndSubWarning {
-            get {
-                return ResourceManager.GetString("Main_AutoAdd_AudioAndSubWarning", resourceCulture);
             }
         }
         
@@ -3529,6 +3563,15 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Theme:.
+        /// </summary>
+        public static string OptionsView_DarkThemeMode {
+            get {
+                return ResourceManager.GetString("OptionsView_DarkThemeMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Downloading....
         /// </summary>
         public static string OptionsView_Downloading {
@@ -3753,6 +3796,15 @@ namespace HandBrakeWPF.Properties {
         public static string OptionsView_RemotePortLimit {
             get {
                 return ResourceManager.GetString("OptionsView_RemotePortLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Requires Restart).
+        /// </summary>
+        public static string OptionsView_RequiresRestart {
+            get {
+                return ResourceManager.GetString("OptionsView_RequiresRestart", resourceCulture);
             }
         }
         
@@ -5694,6 +5746,15 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Fine Tune Picture Settings.
+        /// </summary>
+        public static string StaticPreviewView_FineTuning {
+            get {
+                return ResourceManager.GetString("StaticPreviewView_FineTuning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Live Preview.
         /// </summary>
         public static string StaticPreviewView_LivePreview {
@@ -5717,6 +5778,15 @@ namespace HandBrakeWPF.Properties {
         public static string StaticPreviewView_SelectPreviewImage {
             get {
                 return ResourceManager.GetString("StaticPreviewView_SelectPreviewImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show crop adjustment controls..
+        /// </summary>
+        public static string StaticPreviewView_ShowPictureSettingsAdjustment {
+            get {
+                return ResourceManager.GetString("StaticPreviewView_ShowPictureSettingsAdjustment", resourceCulture);
             }
         }
         
@@ -6075,6 +6145,15 @@ namespace HandBrakeWPF.Properties {
         public static string SummaryView_Chapters {
             get {
                 return ResourceManager.GetString("SummaryView_Chapters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Colourspace.
+        /// </summary>
+        public static string SummaryView_Colourspace {
+            get {
+                return ResourceManager.GetString("SummaryView_Colourspace", resourceCulture);
             }
         }
         

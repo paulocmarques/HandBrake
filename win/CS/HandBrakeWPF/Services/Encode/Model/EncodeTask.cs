@@ -12,8 +12,8 @@ namespace HandBrakeWPF.Services.Encode.Model
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
 
-    using HandBrake.Interop.Interop.Model;
-    using HandBrake.Interop.Interop.Model.Encoding;
+    using HandBrake.Interop.Interop.Interfaces.Model.Filters;
+    using HandBrake.Interop.Interop.Interfaces.Model.Picture;
 
     using HandBrakeWPF.Model.Filters;
     using HandBrakeWPF.Services.Encode.Model.Models;
@@ -27,6 +27,8 @@ namespace HandBrakeWPF.Services.Encode.Model
     using OutputFormat = Models.OutputFormat;
     using PointToPointMode = Models.PointToPointMode;
     using SubtitleTrack = Models.SubtitleTrack;
+    using VideoEncoder = HandBrakeWPF.Model.Video.VideoEncoder;
+    using VideoEncodeRateType = HandBrakeWPF.Model.Video.VideoEncodeRateType;
     using VideoLevel = Models.Video.VideoLevel;
     using VideoPreset = Models.Video.VideoPreset;
     using VideoProfile = Models.Video.VideoProfile;
@@ -91,6 +93,11 @@ namespace HandBrakeWPF.Services.Encode.Model
             this.SharpenTune = task.SharpenTune;
             this.SharpenCustom = task.SharpenCustom;
             this.Padding = task.Padding;
+            this.Colourspace = task.Colourspace;
+            this.CustomColourspace = task.CustomColourspace;
+            this.ChromaSmooth = task.ChromaSmooth;
+            this.ChromaSmoothTune = task.ChromaSmoothTune;
+            this.CustomChromaSmooth = task.CustomChromaSmooth;
 
             this.DisplayWidth = task.DisplayWidth;
             this.EndPoint = task.EndPoint;
@@ -237,7 +244,17 @@ namespace HandBrakeWPF.Services.Encode.Model
         public string CustomDeblock { get; set; }
 
         public PaddingFilter Padding { get; set; }
- 
+
+        public FilterPreset Colourspace { get; set; }
+
+        public string CustomColourspace { get; set; }
+
+        public FilterPreset ChromaSmooth { get; set; }
+
+        public FilterTune ChromaSmoothTune { get; set; }
+
+        public string CustomChromaSmooth { get; set; }
+
         /* Video */
 
         public VideoEncodeRateType VideoEncodeRateType { get; set; }

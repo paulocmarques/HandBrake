@@ -14,6 +14,7 @@ namespace HandBrakeWPF.Helpers
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Text.Json;
     using System.Text.RegularExpressions;
     using System.Windows;
 
@@ -23,9 +24,7 @@ namespace HandBrakeWPF.Helpers
     using HandBrakeWPF.Services.Queue.Model;
     using HandBrakeWPF.Utilities;
 
-    using Newtonsoft.Json;
-
-    using IQueueService = HandBrakeWPF.Services.Queue.Interfaces.IQueueService;
+    using IQueueService = Services.Queue.Interfaces.IQueueService;
 
     public class QueueRecoveryHelper
     {
@@ -50,7 +49,7 @@ namespace HandBrakeWPF.Helpers
                 RecoverFromBackupFailure();
 
                 // Now check for all available recovery files. (There may be more than 1 for multi-instance support)
-                string tempPath = DirectoryUtilities.GetUserStoragePath(VersionHelper.IsNightly());
+                string tempPath = DirectoryUtilities.GetUserStoragePath(HandBrakeVersionHelper.IsNightly());
                 DirectoryInfo info = new DirectoryInfo(tempPath);
                 IEnumerable<FileInfo> foundFiles = info.GetFiles("*.json").Where(f => f.Name.StartsWith(QueueFileName));
                 var queueFiles = GetFilesExcludingActiveProcesses(foundFiles, filterQueueFiles);
@@ -70,7 +69,7 @@ namespace HandBrakeWPF.Helpers
                     {
                         using (StreamReader stream = new StreamReader(file))
                         {
-                            List<QueueTask> list = list = JsonConvert.DeserializeObject<List<QueueTask>>(stream.ReadToEnd());
+                            List<QueueTask> list = list = JsonSerializer.Deserialize<List<QueueTask>>(stream.ReadToEnd(), JsonSettings.Options);
                             if (list != null && list.Count == 0)
                             {
                                 removeFiles.Add(file);
@@ -127,7 +126,7 @@ namespace HandBrakeWPF.Helpers
         /// </returns>
         public static bool RecoverQueue(IQueueService encodeQueue, IErrorService errorService, bool silentRecovery, List<string> queueFilter)
         {
-            string appDataPath = DirectoryUtilities.GetUserStoragePath(VersionHelper.IsNightly());
+            string appDataPath = DirectoryUtilities.GetUserStoragePath(HandBrakeVersionHelper.IsNightly());
             List<string> queueFiles = CheckQueueRecovery(queueFilter);
             MessageBoxResult result = MessageBoxResult.None;
             if (!silentRecovery)
@@ -178,7 +177,7 @@ namespace HandBrakeWPF.Helpers
 
         public static bool ArchivesExist()
         {
-            string appDataPath = DirectoryUtilities.GetUserStoragePath(VersionHelper.IsNightly());
+            string appDataPath = DirectoryUtilities.GetUserStoragePath(HandBrakeVersionHelper.IsNightly());
             DirectoryInfo info = new DirectoryInfo(appDataPath);
             IEnumerable<FileInfo> foundFiles = info.GetFiles("*.archive").Where(f => f.Name.StartsWith(QueueFileName));
 
@@ -187,7 +186,7 @@ namespace HandBrakeWPF.Helpers
 
         private static void RecoverFromBackupFailure()
         {
-            string appDataPath = DirectoryUtilities.GetUserStoragePath(VersionHelper.IsNightly());
+            string appDataPath = DirectoryUtilities.GetUserStoragePath(HandBrakeVersionHelper.IsNightly());
             DirectoryInfo info = new DirectoryInfo(appDataPath);
             IEnumerable<FileInfo> foundFiles = info.GetFiles("*.last");
 
@@ -236,7 +235,7 @@ namespace HandBrakeWPF.Helpers
 
         private static void CleanupFiles(List<string> removeFiles, bool archive)
         {
-            string appDataPath = DirectoryUtilities.GetUserStoragePath(VersionHelper.IsNightly());
+            string appDataPath = DirectoryUtilities.GetUserStoragePath(HandBrakeVersionHelper.IsNightly());
 
             // Cleanup old/unused queue files for now.
             foreach (string file in removeFiles)
@@ -272,7 +271,7 @@ namespace HandBrakeWPF.Helpers
         /// </summary>
         private static void TidyArchiveFiles()
         {
-            string appDataPath = DirectoryUtilities.GetUserStoragePath(VersionHelper.IsNightly());
+            string appDataPath = DirectoryUtilities.GetUserStoragePath(HandBrakeVersionHelper.IsNightly());
             DirectoryInfo info = new DirectoryInfo(appDataPath);
             IEnumerable<FileInfo> foundFiles = info.GetFiles("*.archive").Where(f => f.Name.StartsWith(QueueFileName));
 
@@ -290,7 +289,7 @@ namespace HandBrakeWPF.Helpers
 
         public static void ResetArchives()
         {
-            string appDataPath = DirectoryUtilities.GetUserStoragePath(VersionHelper.IsNightly());
+            string appDataPath = DirectoryUtilities.GetUserStoragePath(HandBrakeVersionHelper.IsNightly());
             DirectoryInfo info = new DirectoryInfo(appDataPath);
             IEnumerable<FileInfo> foundFiles = info.GetFiles("*.archive").Where(f => f.Name.StartsWith(QueueFileName));
             foreach (FileInfo file in foundFiles)

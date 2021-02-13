@@ -15,11 +15,9 @@ namespace HandBrakeWPF.ViewModels
     using System.Globalization;
 
     using HandBrake.Interop.Interop;
-    using HandBrake.Interop.Interop.Model;
-    using HandBrake.Interop.Interop.Model.Encoding;
+    using HandBrake.Interop.Interop.Interfaces.Model.Picture;
 
     using HandBrakeWPF.EventArgs;
-    using HandBrakeWPF.Helpers;
     using HandBrakeWPF.Model.Picture;
     using HandBrakeWPF.Properties;
     using HandBrakeWPF.Services.Presets.Model;
@@ -28,7 +26,8 @@ namespace HandBrakeWPF.ViewModels
     using HandBrakeWPF.ViewModelItems.Filters;
     using HandBrakeWPF.ViewModels.Interfaces;
 
-    using EncodeTask = HandBrakeWPF.Services.Encode.Model.EncodeTask;
+    using EncodeTask = Services.Encode.Model.EncodeTask;
+    using Size = Model.Picture.Size;
 
     public class PictureSettingsViewModel : ViewModelBase, IPictureSettingsViewModel
     {
@@ -52,6 +51,7 @@ namespace HandBrakeWPF.ViewModels
         public PictureSettingsViewModel(IStaticPreviewViewModel staticPreviewViewModel)
         {
             this.StaticPreviewViewModel = staticPreviewViewModel;
+            this.StaticPreviewViewModel.SetPictureSettingsInstance(this);
             this.sourceResolution = new Size(0, 0);
             this.Task = new EncodeTask();
             this.PaddingFilter = new PadFilter(this.Task, () => this.OnTabStatusChanged(null));
@@ -159,6 +159,7 @@ namespace HandBrakeWPF.ViewModels
                 {
                     this.Task.MaxHeight = value;
                     this.NotifyOfPropertyChange(() => this.MaxHeight);
+                    this.OnTabStatusChanged(null);
                 }
             }
         }
@@ -172,6 +173,7 @@ namespace HandBrakeWPF.ViewModels
                 {
                     this.Task.MaxWidth = value;
                     this.NotifyOfPropertyChange(() => this.MaxWidth);
+                    this.OnTabStatusChanged(null);
                 }
             }
         }
@@ -260,6 +262,11 @@ namespace HandBrakeWPF.ViewModels
 
             set
             {
+                if (!ValidCropTB(value, this.CropTop))
+                {
+                    return; // Don't accept user input.
+                }
+
                 this.Task.Cropping.Bottom = value;
                 this.NotifyOfPropertyChange(() => this.CropBottom);
                 this.RecaulcatePictureSettingsProperties(ChangedPictureField.Crop);
@@ -272,6 +279,11 @@ namespace HandBrakeWPF.ViewModels
 
             set
             {
+                if (!ValidCropLR(value, this.CropRight))
+                {
+                    return; // Don't accept user input.
+                }
+
                 this.Task.Cropping.Left = value;
                 this.NotifyOfPropertyChange(() => this.CropLeft);
                 this.RecaulcatePictureSettingsProperties(ChangedPictureField.Crop);
@@ -284,6 +296,11 @@ namespace HandBrakeWPF.ViewModels
 
             set
             {
+                if (!ValidCropLR(value, this.CropLeft))
+                {
+                    return; // Don't accept user input.
+                }
+
                 this.Task.Cropping.Right = value;
                 this.NotifyOfPropertyChange(() => this.CropRight);
                 this.RecaulcatePictureSettingsProperties(ChangedPictureField.Crop);
@@ -296,12 +313,21 @@ namespace HandBrakeWPF.ViewModels
 
             set
             {
+                if (!ValidCropTB(value, this.CropBottom))
+                {
+                    return; // Don't accept user input.
+                }
+
                 this.Task.Cropping.Top = value;
                 this.NotifyOfPropertyChange(() => this.CropTop);
                 this.RecaulcatePictureSettingsProperties(ChangedPictureField.Crop);
             }
         }
 
+        public int MaxCropLR => currentTitle?.Resolution.Width - 8 ?? 0;
+        
+        public int MaxCropTB => currentTitle?.Resolution.Height - 8 ?? 0;
+        
         public bool IsCustomCrop
         {
             get => this.Task.HasCropping;
@@ -310,6 +336,7 @@ namespace HandBrakeWPF.ViewModels
             {
                 this.Task.HasCropping = value;
                 this.NotifyOfPropertyChange(() => this.IsCustomCrop);
+                this.OnTabStatusChanged(null);
 
                 if (!value && this.currentTitle != null)
                 {
@@ -554,16 +581,8 @@ namespace HandBrakeWPF.ViewModels
                 this.sourceParValues = title.ParVal;
                 this.sourceResolution = title.Resolution;
 
-                // Update the cropping values, preffering those in the presets.
-                if (!preset.Task.HasCropping)
-                {
-                    this.Task.Cropping.Top = title.AutoCropDimensions.Top;
-                    this.Task.Cropping.Bottom = title.AutoCropDimensions.Bottom;
-                    this.Task.Cropping.Left = title.AutoCropDimensions.Left;
-                    this.Task.Cropping.Right = title.AutoCropDimensions.Right;
-                    this.IsCustomCrop = false;
-                }
-                else
+                // Update the cropping values, preferring those in the presets.
+                if (preset.Task.HasCropping)
                 {
                     this.Task.Cropping.Left = preset.Task.Cropping.Left;
                     this.Task.Cropping.Right = preset.Task.Cropping.Right;
@@ -571,17 +590,20 @@ namespace HandBrakeWPF.ViewModels
                     this.Task.Cropping.Bottom = preset.Task.Cropping.Bottom;
                     this.IsCustomCrop = true;
                 }
-
-                // Setup the Maximum Width / Height with sane 4K fallback.
-                this.MaxWidth = preset.Task.MaxWidth ?? 3840;
-                this.MaxHeight = preset.Task.MaxHeight ?? 2160;
-                this.SetSelectedPictureSettingsResLimitMode();
-
+                else if (!this.IsCustomCrop)  
+                {
+                    // Only set Auto-crop values if we are in Automatic mode. If it's custom, assume the user has taken control.
+                    this.Task.Cropping.Top = title.AutoCropDimensions.Top;
+                    this.Task.Cropping.Bottom = title.AutoCropDimensions.Bottom;
+                    this.Task.Cropping.Left = title.AutoCropDimensions.Left;
+                    this.Task.Cropping.Right = title.AutoCropDimensions.Right;
+                    this.IsCustomCrop = false;
+                }
+                
                 // Set the W/H
                 // Set the width, then check the height doesn't breach the max height and correct if necessary.
                 this.Task.Width = this.GetModulusValue(this.GetRes((this.sourceResolution.Width - this.CropLeft - this.CropRight), this.MaxWidth));
                 this.Task.Height = this.GetModulusValue(this.GetRes((this.sourceResolution.Height - this.CropTop - this.CropBottom), this.MaxHeight));
-                this.MaintainAspectRatio = preset.Task.KeepDisplayAspect;
 
                 // Set Screen Controls
                 this.SourceInfo = string.Format(
@@ -606,6 +628,21 @@ namespace HandBrakeWPF.ViewModels
             }
 
             if (preset.Task.Modulus != this.SelectedModulus)
+            {
+                return false;
+            }
+
+            if (preset.Task.MaxHeight != this.MaxHeight)
+            {
+                return false;
+            }
+
+            if (preset.Task.MaxWidth != this.MaxWidth)
+            {
+                return false;
+            }
+
+            if (!preset.Task.HasCropping && this.IsCustomCrop)
             {
                 return false;
             }
@@ -644,9 +681,9 @@ namespace HandBrakeWPF.ViewModels
             this.SetSelectedPictureSettingsResLimitMode();
         }
 
-        private PictureSize.PictureSettingsTitle GetPictureTitleInfo()
+        private PictureSettingsTitle GetPictureTitleInfo()
         {
-            PictureSize.PictureSettingsTitle title = new PictureSize.PictureSettingsTitle
+            PictureSettingsTitle title = new PictureSettingsTitle
             {
                 Width = this.sourceResolution.Width,
                 Height = this.sourceResolution.Height,
@@ -657,9 +694,9 @@ namespace HandBrakeWPF.ViewModels
             return title;
         }
 
-        private PictureSize.PictureSettingsJob GetPictureSettings(ChangedPictureField changedField)
+        private PictureSettingsJob GetPictureSettings(ChangedPictureField changedField)
         {
-            PictureSize.PictureSettingsJob job = new PictureSize.PictureSettingsJob
+            PictureSettingsJob job = new PictureSettingsJob
             {
                 Width = this.Width,
                 Height = this.Height,
@@ -725,19 +762,19 @@ namespace HandBrakeWPF.ViewModels
             }
 
             // Choose which setting to keep.
-            PictureSize.KeepSetting setting = PictureSize.KeepSetting.HB_KEEP_WIDTH;
+            HandBrakePictureHelpers.KeepSetting setting = HandBrakePictureHelpers.KeepSetting.HB_KEEP_WIDTH;
             switch (changedField)
             {
                 case ChangedPictureField.Width:
-                    setting = PictureSize.KeepSetting.HB_KEEP_WIDTH;
+                    setting = HandBrakePictureHelpers.KeepSetting.HB_KEEP_WIDTH;
                     break;
                 case ChangedPictureField.Height:
-                    setting = PictureSize.KeepSetting.HB_KEEP_HEIGHT;
+                    setting = HandBrakePictureHelpers.KeepSetting.HB_KEEP_HEIGHT;
                     break;
             }
 
             // Step 2, For the changed field, call hb_set_anamorphic_size and process the results.
-            PictureSize.AnamorphicResult result = PictureSize.hb_set_anamorphic_size2(this.GetPictureSettings(changedField), this.GetPictureTitleInfo(), setting);
+            AnamorphicResult result = HandBrakePictureHelpers.hb_set_anamorphic_size2(this.GetPictureSettings(changedField), this.GetPictureTitleInfo(), setting);
             double dispWidth = Math.Round((result.OutputWidth * result.OutputParWidth / result.OutputParHeight), 0);
 
             this.Task.Width = result.OutputWidth;
@@ -867,6 +904,28 @@ namespace HandBrakeWPF.ViewModels
             {
                 this.SelectedPictureSettingsResLimitMode = PictureSettingsResLimitModes.Custom;
             }
+        }
+
+        private bool ValidCropTB(int value, int value2)
+        {
+            int totalCrop = value + value2;
+            if (totalCrop >= this.currentTitle.Resolution.Height)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool ValidCropLR(int value, int value2)
+        {
+            int totalCrop = value + value2;
+            if (totalCrop >= this.currentTitle.Resolution.Width)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 

@@ -11,9 +11,9 @@ namespace HandBrake.Interop.Interop.Interfaces
 {
     using System;
 
-    using HandBrake.Interop.Interop.EventArgs;
+    using HandBrake.Interop.Interop.Interfaces.EventArgs;
+    using HandBrake.Interop.Interop.Interfaces.Model.Preview;
     using HandBrake.Interop.Interop.Json.Scan;
-    using HandBrake.Interop.Interop.Model.Preview;
 
     /// <summary>
     /// The Interface for HandBrakeInstance
@@ -25,7 +25,7 @@ namespace HandBrake.Interop.Interop.Interfaces
         /// <summary>
         /// Fires when a scan has completed.
         /// </summary>
-        event EventHandler<EventArgs> ScanCompleted;
+        event EventHandler<System.EventArgs> ScanCompleted;
 
         /// <summary>
         /// Fires for progress updates when scanning.

@@ -20,10 +20,9 @@ namespace HandBrakeWPF.Services.Presets
     using System.Windows.Xps.Serialization;
 
     using HandBrake.Interop.Interop;
+    using HandBrake.Interop.Interop.Interfaces.Model;
+    using HandBrake.Interop.Interop.Interfaces.Model.Presets;
     using HandBrake.Interop.Interop.Json.Presets;
-    using HandBrake.Interop.Interop.Model;
-    using HandBrake.Interop.Interop.Model.Encoding;
-    using HandBrake.Interop.Model;
     using HandBrake.Interop.Utilities;
 
     using HandBrakeWPF.Factories;
@@ -38,14 +37,14 @@ namespace HandBrakeWPF.Services.Presets
 
     using Newtonsoft.Json;
 
-    using GeneralApplicationException = HandBrakeWPF.Exceptions.GeneralApplicationException;
-    using SystemInfo = HandBrake.Interop.Utilities.SystemInfo;
+    using GeneralApplicationException = Exceptions.GeneralApplicationException;
+    using VideoEncoder = HandBrakeWPF.Model.Video.VideoEncoder;
 
     public class PresetService : IPresetService
     {
         public const int ForcePresetReset = 3;
         public static string UserPresetCatgoryName = "Custom Presets";
-        private readonly string presetFile = Path.Combine(DirectoryUtilities.GetUserStoragePath(VersionHelper.IsNightly()), "presets.json");
+        private readonly string presetFile = Path.Combine(DirectoryUtilities.GetUserStoragePath(HandBrakeVersionHelper.IsNightly()), "presets.json");
         private readonly ObservableCollection<IPresetObject> presets = new ObservableCollection<IPresetObject>(); // Can store Presets and PresetDisplayCategory objects.
         private readonly Dictionary<string, Preset> flatPresetDict = new Dictionary<string, Preset>();
         private readonly List<Preset> flatPresetList = new List<Preset>();
@@ -424,6 +423,8 @@ namespace HandBrakeWPF.Services.Presets
             // Clear the current built in Presets and now parse the temporary Presets file.
             this.ClearBuiltIn();
 
+            bool hasUserDefault = this.flatPresetDict.Values.FirstOrDefault(f => f.IsDefault) != null;
+
             IList<HBPresetCategory> presetCategories = HandBrakePresetService.GetBuiltInPresets();
 
             foreach (var category in presetCategories)
@@ -435,6 +436,11 @@ namespace HandBrakeWPF.Services.Presets
                     preset.Category = category.PresetName;
                     preset.Task.AllowedPassthruOptions = new AllowedPassthru(true); // We don't want to override the built-in preset
                     preset.IsPresetDisabled = this.IsPresetDisabled(preset) || hbpreset.PresetDisabled;
+
+                    if (hbpreset.Default && hasUserDefault)
+                    {
+                        preset.IsDefault = false;
+                    }
 
                     this.Add(preset, true);
                 }
@@ -836,37 +842,37 @@ namespace HandBrakeWPF.Services.Presets
             bool isNvencEnabled = this.userSettingService.GetUserSetting<bool>(UserSettingConstants.EnableNvencEncoder);
             bool isVcnEnabled = this.userSettingService.GetUserSetting<bool>(UserSettingConstants.EnableVceEncoder);
 
-            if (preset.Task.VideoEncoder == VideoEncoder.QuickSync && (!SystemInfo.IsQsvAvailable || !isQsvEnabled))
+            if (preset.Task.VideoEncoder == VideoEncoder.QuickSync && (!HandBrakeHardwareEncoderHelper.IsQsvAvailable || !isQsvEnabled))
             {
                 return true;
             }
 
-            if (preset.Task.VideoEncoder == VideoEncoder.QuickSyncH265 && (!SystemInfo.IsQsvAvailableH265 || !isQsvEnabled))
+            if (preset.Task.VideoEncoder == VideoEncoder.QuickSyncH265 && (!HandBrakeHardwareEncoderHelper.IsQsvAvailableH265 || !isQsvEnabled))
             {
                 return true;
             }
 
-            if (preset.Task.VideoEncoder == VideoEncoder.QuickSyncH26510b && (!SystemInfo.IsQsvAvailableH265 || !isQsvEnabled))
+            if (preset.Task.VideoEncoder == VideoEncoder.QuickSyncH26510b && (!HandBrakeHardwareEncoderHelper.IsQsvAvailableH265 || !isQsvEnabled))
             {
                 return true;
             }
 
-            if (preset.Task.VideoEncoder == VideoEncoder.VceH264 && (!SystemInfo.IsVceH264Available || !isVcnEnabled))
+            if (preset.Task.VideoEncoder == VideoEncoder.VceH264 && (!HandBrakeHardwareEncoderHelper.IsVceH264Available || !isVcnEnabled))
             {
                 return true;
             }
 
-            if (preset.Task.VideoEncoder == VideoEncoder.VceH265 && (!SystemInfo.IsVceH265Available || !isVcnEnabled))
+            if (preset.Task.VideoEncoder == VideoEncoder.VceH265 && (!HandBrakeHardwareEncoderHelper.IsVceH265Available || !isVcnEnabled))
             {
                 return true;
             }
 
-            if (preset.Task.VideoEncoder == VideoEncoder.NvencH264 && (!SystemInfo.IsNVEncH264Available || !isNvencEnabled))
+            if (preset.Task.VideoEncoder == VideoEncoder.NvencH264 && (!HandBrakeHardwareEncoderHelper.IsNVEncH264Available || !isNvencEnabled))
             {
                 return true;
             }
 
-            if (preset.Task.VideoEncoder == VideoEncoder.NvencH265 && (!SystemInfo.IsNVEncH265Available || !isNvencEnabled))
+            if (preset.Task.VideoEncoder == VideoEncoder.NvencH265 && (!HandBrakeHardwareEncoderHelper.IsNVEncH265Available || !isNvencEnabled))
             {
                 return true;
             }

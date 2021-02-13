@@ -1585,6 +1585,36 @@ int hb_preset_apply_filters(const hb_dict_t *preset, hb_dict_t *job_dict)
     }
     free(pad);
 
+    // Colorspace filter
+    const char *colorspace = hb_value_get_string(hb_dict_get(preset, "PictureColorspacePreset"));
+    if (colorspace != NULL &&
+        strcasecmp(colorspace, "off"))
+    {
+        const char * colorspace_custom = hb_value_get_string(
+                                hb_dict_get(preset, "PictureColorspaceCustom"));
+        filter_settings = hb_generate_filter_settings(HB_FILTER_COLORSPACE,
+                                    colorspace, NULL, colorspace_custom);
+        if (filter_settings == NULL)
+        {
+            hb_error("Invalid colorspace filter settings (%s%s%s)",
+                     colorspace,
+                     colorspace_custom ? "," : "",
+                     colorspace_custom ? colorspace_custom : "");
+            return -1;
+        }
+        else if (!hb_dict_get_bool(filter_settings, "disable"))
+        {
+            filter_dict = hb_dict_init();
+            hb_dict_set(filter_dict, "ID", hb_value_int(HB_FILTER_COLORSPACE));
+            hb_dict_set(filter_dict, "Settings", filter_settings);
+            hb_add_filter2(filter_list, filter_dict);
+        }
+        else
+        {
+            hb_value_free(&filter_settings);
+        }
+    }
+
     hb_value_t *fr_value = hb_dict_get(preset, "VideoFramerate");
     int vrate_den = get_video_framerate(fr_value);
     if (vrate_den < 0)
@@ -1667,7 +1697,7 @@ int hb_preset_apply_video(const hb_dict_t *preset, hb_dict_t *job_dict)
     video_dict = hb_dict_get(job_dict, "Video");
     hb_dict_set(video_dict, "Encoder", hb_value_string(encoder->short_name));
 
-    color_matrix_code = hb_value_get_int(hb_dict_get(preset, "VideoColorMatrixCodeOveride"));
+    color_matrix_code = hb_value_get_int(hb_dict_get(preset, "VideoColorMatrixCodeOverride"));
     if (color_matrix_code != 0)
     {
         int color_prim, color_transfer, color_matrix;

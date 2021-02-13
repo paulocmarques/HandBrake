@@ -70,7 +70,7 @@ namespace HandBrakeWPF
         public const string AutonameFileCollisionBehaviour = "AutonameFileCollisionBehaviour";
         public const string AutonameFilePrePostString = "AutonameFilePrePostString";
         public const string WhenDonePerformActionImmediately = "WhenDonePerformActionImmediately";
-        public const string UseDarkTheme = "UseDarkTheme";
+        public const string DarkThemeMode = "DarkThemeMode";
         public const string PreviewRotationFlip = "PreviewRotationFlip";
         public const string AlwaysUseDefaultPath = "AlwaysUseDefaultPath";
         public const string PauseEncodingOnLowBattery = "PauseEncodingOnLowBattery";
@@ -78,5 +78,6 @@ namespace HandBrakeWPF
         public const string EnableQuickSyncLowPower = "EnableQuickSyncLowPower";
         public const string SimultaneousEncodes = "SimultaneousEncodes";
         public const string MetadataPassthru = "MetadataPassthru";
+        public const string PreviewShowPictureSettingsOverlay = "PreviewShowPictureSettingsOverlay";
     }
 }

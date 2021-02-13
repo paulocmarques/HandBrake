@@ -16,16 +16,15 @@ namespace HandBrakeWPF.Services.Encode.Factories
 
     using HandBrake.Interop.Interop;
     using HandBrake.Interop.Interop.HbLib;
+    using HandBrake.Interop.Interop.Interfaces.Model;
+    using HandBrake.Interop.Interop.Interfaces.Model.Encoders;
     using HandBrake.Interop.Interop.Json.Encode;
     using HandBrake.Interop.Interop.Json.Shared;
-    using HandBrake.Interop.Interop.Model.Encoding;
-    using HandBrake.Interop.Model;
 
     using HandBrakeWPF.Helpers;
+    using HandBrakeWPF.Model.Filters;
     using HandBrakeWPF.Services.Interfaces;
     using HandBrakeWPF.Utilities;
-
-    using Newtonsoft.Json.Linq;
 
     using AudioEncoder = Model.Models.AudioEncoder;
     using AudioEncoderRateType = Model.Models.AudioEncoderRateType;
@@ -37,8 +36,9 @@ namespace HandBrakeWPF.Services.Encode.Factories
     using PointToPointMode = Model.Models.PointToPointMode;
     using Subtitle = HandBrake.Interop.Interop.Json.Encode.Subtitles;
     using SubtitleTrack = Model.Models.SubtitleTrack;
-    using SystemInfo = HandBrake.Interop.Utilities.SystemInfo;
     using Validate = Helpers.Validate;
+    using VideoEncoder = HandBrakeWPF.Model.Video.VideoEncoder;
+    using VideoEncodeRateType = HandBrakeWPF.Model.Video.VideoEncodeRateType;
 
     /// <summary>
     /// This factory takes the internal EncodeJob object and turns it into a set of JSON models
@@ -210,7 +210,7 @@ namespace HandBrakeWPF.Services.Encode.Factories
             return subtitle;
         }
 
-        private  Video CreateVideo(EncodeTask job, HBConfiguration configuration)
+        private Video CreateVideo(EncodeTask job, HBConfiguration configuration)
         {
             Video video = new Video();
 
@@ -245,7 +245,7 @@ namespace HandBrakeWPF.Services.Encode.Factories
                 video.Turbo = job.TurboFirstPass;
             }
 
-            video.QSV.Decode = SystemInfo.IsQsvAvailable && configuration.EnableQuickSyncDecoding;
+            video.QSV.Decode = HandBrakeHardwareEncoderHelper.IsQsvAvailable && configuration.EnableQuickSyncDecoding;
 
             // The use of the QSV decoder is configurable for non QSV encoders.
             if (video.QSV.Decode && job.VideoEncoder != VideoEncoder.QuickSync && job.VideoEncoder != VideoEncoder.QuickSyncH265 && job.VideoEncoder != VideoEncoder.QuickSyncH26510b)
@@ -255,7 +255,7 @@ namespace HandBrakeWPF.Services.Encode.Factories
             
             video.Options = job.ExtraAdvancedArguments;
 
-            if (SystemInfo.QsvHardwareGeneration > 6 && (job.VideoEncoder == VideoEncoder.QuickSync || job.VideoEncoder == VideoEncoder.QuickSyncH265 || job.VideoEncoder == VideoEncoder.QuickSyncH26510b))
+            if (HandBrakeHardwareEncoderHelper.QsvHardwareGeneration > 6 && (job.VideoEncoder == VideoEncoder.QuickSync || job.VideoEncoder == VideoEncoder.QuickSyncH265 || job.VideoEncoder == VideoEncoder.QuickSyncH26510b))
             {
                 if (configuration.EnableQsvLowPower && !video.Options.Contains("lowpower"))
                 {
@@ -487,6 +487,32 @@ namespace HandBrakeWPF.Services.Encode.Factories
                     filter.FilterList.Add(padding);
                 }
             }
+
+            // Colourspace
+            if (job.Colourspace != null && job.Colourspace.Key != "off")
+            {
+                string unparsedJson = HandBrakeFilterHelpers.GenerateFilterSettingJson((int)hb_filter_ids.HB_FILTER_COLORSPACE, job.Colourspace.Key, null, job.CustomColourspace);
+                if (!string.IsNullOrEmpty(unparsedJson))
+                {
+                    JsonDocument settings = JsonDocument.Parse(unparsedJson);
+
+                    Filter filterItem = new Filter { ID = (int)hb_filter_ids.HB_FILTER_COLORSPACE, Settings = settings };
+                    filter.FilterList.Add(filterItem);
+                }
+            }
+
+            if (job.ChromaSmooth != null && job.ChromaSmooth.Key != "off")
+            {
+                string unparsedJson = HandBrakeFilterHelpers.GenerateFilterSettingJson((int)hb_filter_ids.HB_FILTER_CHROMA_SMOOTH, job.ChromaSmooth.Key, job.ChromaSmoothTune?.Key, job.CustomChromaSmooth);
+                if (!string.IsNullOrEmpty(unparsedJson))
+                {
+                    JsonDocument settings = JsonDocument.Parse(unparsedJson);
+
+                    Filter filterItem = new Filter { ID = (int)hb_filter_ids.HB_FILTER_CHROMA_SMOOTH, Settings = settings };
+                    filter.FilterList.Add(filterItem);
+                }
+            }
+
 
             // Grayscale
             if (job.Grayscale)

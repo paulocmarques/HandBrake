@@ -15,10 +15,12 @@ namespace HandBrakeWPF.Services
     using System.IO;
     using System.Linq;
 
-    using HandBrake.Interop.Model;
+    using HandBrake.Interop.Interop.Interfaces.Model.Picture;
     using HandBrake.Interop.Utilities;
 
     using HandBrakeWPF.Extensions;
+    using HandBrakeWPF.Model;
+    using HandBrakeWPF.Model.Video;
     using HandBrakeWPF.Properties;
     using HandBrakeWPF.Services.Interfaces;
     using HandBrakeWPF.Utilities;
@@ -35,7 +37,7 @@ namespace HandBrakeWPF.Services
     /// </summary>
     public class UserSettingService : IUserSettingService
     {
-        private readonly string settingsFile = Path.Combine(DirectoryUtilities.GetUserStoragePath(VersionHelper.IsNightly()), "settings.json");
+        private readonly string settingsFile = Path.Combine(DirectoryUtilities.GetUserStoragePath(HandBrakeVersionHelper.IsNightly()), "settings.json");
         private readonly string releaseSettingsFile = Path.Combine(DirectoryUtilities.GetUserStoragePath(false), "settings.json");
         private readonly string nightlySettingsFile = Path.Combine(DirectoryUtilities.GetUserStoragePath(true), "settings.json");
         private readonly JsonSerializerSettings settings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
@@ -188,7 +190,7 @@ namespace HandBrakeWPF.Services
                         this.userSettings = deserialisedSettings;
                     }
                 }
-                else if (VersionHelper.IsNightly() && File.Exists(this.releaseSettingsFile))
+                else if (HandBrakeVersionHelper.IsNightly() && File.Exists(this.releaseSettingsFile))
                 {
                     // Port the release versions config to the nightly.
                     if (!Directory.Exists(DirectoryUtilities.GetUserStoragePath(true)))
@@ -269,7 +271,7 @@ namespace HandBrakeWPF.Services
             defaults.Add(UserSettingConstants.UpdateStatus, true);
             defaults.Add(UserSettingConstants.LastUpdateCheckDate, DateTime.Now.Date.AddDays(-30));
             defaults.Add(UserSettingConstants.DaysBetweenUpdateCheck, 1);
-            defaults.Add(UserSettingConstants.UseDarkTheme, false);
+            defaults.Add(UserSettingConstants.DarkThemeMode, DarkThemeMode.Light);
             defaults.Add(UserSettingConstants.ShowPreviewOnSummaryTab, true);
             defaults.Add(UserSettingConstants.MainWindowMinimize, false);
             defaults.Add(UserSettingConstants.ClearCompletedFromQueue, false);
@@ -329,7 +331,7 @@ namespace HandBrakeWPF.Services
             defaults.Add(UserSettingConstants.DefaultPlayer, false);
 
             // Experimental
-            defaults.Add(UserSettingConstants.ProcessIsolationEnabled, SystemInfo.IsWindows10() ? true : false);
+            defaults.Add(UserSettingConstants.ProcessIsolationEnabled, SystemInfo.IsWindows10());
             defaults.Add(UserSettingConstants.ProcessIsolationPort, 8037);
             defaults.Add(UserSettingConstants.SimultaneousEncodes, 1);
 
@@ -337,7 +339,7 @@ namespace HandBrakeWPF.Services
             defaults.Add(UserSettingConstants.ScalingMode, 0);
             defaults.Add(UserSettingConstants.ForcePresetReset, 3);
             defaults.Add(UserSettingConstants.MetadataPassthru, true);
-
+            defaults.Add(UserSettingConstants.PreviewShowPictureSettingsOverlay, false);
 
             return defaults;
         }
