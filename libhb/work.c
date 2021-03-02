@@ -293,6 +293,17 @@ hb_work_object_t* hb_video_encoder(hb_handle_t *h, int vcodec)
             w->codec_param = AV_CODEC_ID_H264;
             break;
         case HB_VCODEC_FFMPEG_VT_H265:
+        case HB_VCODEC_FFMPEG_VT_H265_10BIT:
+            w = hb_get_work(h, WORK_ENCAVCODEC);
+            w->codec_param = AV_CODEC_ID_HEVC;
+            break;
+#endif
+#if HB_PROJECT_FEATURE_MF
+        case HB_VCODEC_FFMPEG_MF_H264:
+            w = hb_get_work(h, WORK_ENCAVCODEC);
+            w->codec_param = AV_CODEC_ID_H264;
+            break;
+        case HB_VCODEC_FFMPEG_MF_H265:
             w = hb_get_work(h, WORK_ENCAVCODEC);
             w->codec_param = AV_CODEC_ID_HEVC;
             break;
@@ -539,6 +550,9 @@ void hb_display_job_info(hb_job_t *job)
                 case HB_VCODEC_FFMPEG_NVENC_H265:
                 case HB_VCODEC_FFMPEG_VT_H264:
                 case HB_VCODEC_FFMPEG_VT_H265:
+                case HB_VCODEC_FFMPEG_VT_H265_10BIT:
+                case HB_VCODEC_FFMPEG_MF_H264:
+                case HB_VCODEC_FFMPEG_MF_H265:
                     hb_log("     + profile: %s", job->encoder_profile);
                 default:
                     break;
@@ -563,6 +577,9 @@ void hb_display_job_info(hb_job_t *job)
                 case HB_VCODEC_FFMPEG_VT_H264:
                 // VT h.265 currently only supports auto level
                 // case HB_VCODEC_FFMPEG_VT_H265:
+                // MF h.264/h.265 currently only supports auto level
+                // case HB_VCODEC_FFMPEG_MF_H264:
+                // case HB_VCODEC_FFMPEG_MF_H265:
                     hb_log("     + level:   %s", job->encoder_level);
                 default:
                     break;
@@ -823,6 +840,33 @@ static int bit_depth_is_supported(hb_job_t * job, int bit_depth)
     return 1;
 }
 
+static int pix_fmt_is_supported(hb_job_t * job, int pix_fmt)
+{
+    for (int i = 0; i < hb_list_count(job->list_filter); i++)
+    {
+        hb_filter_object_t *filter = hb_list_item(job->list_filter, i);
+
+        switch (filter->id)
+        {
+            case HB_FILTER_DETELECINE:
+            case HB_FILTER_COMB_DETECT:
+            case HB_FILTER_DECOMB:
+            case HB_FILTER_DENOISE:
+            case HB_FILTER_NLMEANS:
+            case HB_FILTER_CHROMA_SMOOTH:
+            case HB_FILTER_LAPSHARP:
+            case HB_FILTER_UNSHARP:
+            case HB_FILTER_GRAYSCALE:
+                if (pix_fmt != AV_PIX_FMT_YUV420P)
+                {
+                    return 0;
+                }
+        }
+    }
+
+    return 1;
+}
+
 static int get_best_pix_ftm(hb_job_t * job)
 {
     int bit_depth = hb_get_bit_depth(job->title->pix_fmt);
@@ -847,6 +891,13 @@ static int get_best_pix_ftm(hb_job_t * job)
         }
     }
 #endif
+    if (job->vcodec == HB_VCODEC_FFMPEG_MF_H264 || job->vcodec == HB_VCODEC_FFMPEG_MF_H265)
+    {
+        if (pix_fmt_is_supported(job, AV_PIX_FMT_NV12))
+        {
+            return AV_PIX_FMT_NV12;
+        }
+    }
     if (bit_depth >= 12 && bit_depth_is_supported(job, 12))
     {
         return AV_PIX_FMT_YUV420P12;
@@ -2005,7 +2056,7 @@ void hb_work_loop( void * _w )
  * Loops calling work function for associated filter object.
  * Sleeps when fifo is full.
  * Monitors work done indicator.
- * Exits loop when work indiactor is set.
+ * Exits loop when work indicator is set.
  * @param _w Handle to work object.
  */
 static void filter_loop( void * _f )

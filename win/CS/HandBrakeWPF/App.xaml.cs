@@ -30,8 +30,6 @@ namespace HandBrakeWPF
     using HandBrakeWPF.ViewModels;
     using HandBrakeWPF.ViewModels.Interfaces;
 
-    using Microsoft.Win32;
-
     using GeneralApplicationException = Exceptions.GeneralApplicationException;
 
     /// <summary>
@@ -74,7 +72,7 @@ namespace HandBrakeWPF
                 Application.Current.Shutdown();
                 return;
             }
-
+            
             if (e.Args.Any(f => f.Equals("--reset")))
             {
                 HandBrakeApp.ResetToDefaults();
@@ -167,14 +165,14 @@ namespace HandBrakeWPF
             {
                 HandBrakeInstanceManager.Init(noHardware);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 if (!noHardware)
                 {
                     MessageBox.Show(HandBrakeWPF.Properties.Resources.Startup_InitFailed, HandBrakeWPF.Properties.Resources.Error, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
 
-                throw exception;
+                throw;
             }
 
             // Initialise the GUI

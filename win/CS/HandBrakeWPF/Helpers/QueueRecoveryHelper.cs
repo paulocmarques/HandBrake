@@ -18,6 +18,7 @@ namespace HandBrakeWPF.Helpers
     using System.Text.RegularExpressions;
     using System.Windows;
 
+    using HandBrake.Interop.Interop;
     using HandBrake.Interop.Utilities;
 
     using HandBrakeWPF.Services.Interfaces;
@@ -206,7 +207,7 @@ namespace HandBrakeWPF.Helpers
         {
             List<string> queueFiles = new List<string>();
 
-            // Remove any files where we have an active instnace.
+            // Remove any files where we have an active instance.
             foreach (FileInfo file in foundFiles)
             {
                 string fileProcessId = file.Name.Replace(QueueFileName, string.Empty).Replace(".json", string.Empty);

@@ -16,6 +16,7 @@ namespace HandBrakeWPF.Services.Presets
     using System.ComponentModel;
     using System.IO;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Windows;
     using System.Windows.Xps.Serialization;
 
@@ -159,6 +160,11 @@ namespace HandBrakeWPF.Services.Presets
                     foreach (var objectPreset in container.PresetList)
                     {
                         HBPresetCategory category = JsonConvert.DeserializeObject<HBPresetCategory>(objectPreset.ToString());
+                        if (category == null || category.ChildrenArray == null || category.ChildrenArray.Count == 0)
+                        {
+                            continue; // Ignore empty preset categories. 
+                        }
+
                         if (category != null && category.ChildrenArray != null && category.ChildrenArray.Count > 0)
                         {
                             foreach (HBPreset hbPreset in category.ChildrenArray)
@@ -833,11 +839,6 @@ namespace HandBrakeWPF.Services.Presets
 
         private bool IsPresetDisabled(Preset preset)
         {
-            if (preset.Task.VideoEncoder == VideoEncoder.QuickSyncH265)
-            {
-                Console.Write("tets");
-            }
-
             bool isQsvEnabled = this.userSettingService.GetUserSetting<bool>(UserSettingConstants.EnableQuickSyncEncoding);
             bool isNvencEnabled = this.userSettingService.GetUserSetting<bool>(UserSettingConstants.EnableNvencEncoder);
             bool isVcnEnabled = this.userSettingService.GetUserSetting<bool>(UserSettingConstants.EnableVceEncoder);
@@ -876,7 +877,15 @@ namespace HandBrakeWPF.Services.Presets
             {
                 return true;
             }
-            
+
+            if (preset.Task.VideoEncoder == VideoEncoder.MFH264 || preset.Task.VideoEncoder == VideoEncoder.MFH265)
+            {
+                if (RuntimeInformation.ProcessArchitecture != Architecture.Arm64)
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
