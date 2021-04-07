@@ -2819,6 +2819,21 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please be aware that HandBrake is no longer supported on any version of Windows 7 or Windows 8.
+        ///
+        ///While you can continue using the application at your own risk, please be aware that certain features are non-functional and there may be other unknown issues. There is no support available when these issues occur. 
+        ///
+        ///Support for Windows 7 and 8 was deprecated in the 1.3 series. This means there will be no further updates to correct issues on these platforms. 
+        ///
+        ///This warning will display only twice..
+        /// </summary>
+        public static string OldOperatingSystem {
+            get {
+                return ResourceManager.GetString("OldOperatingSystem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Clear Log files older than 7 days.
         /// </summary>
         public static string Options_7DayLogClear {
@@ -4008,6 +4023,33 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Black.
+        /// </summary>
+        public static string PadColour_Black {
+            get {
+                return ResourceManager.GetString("PadColour_Black", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom.
+        /// </summary>
+        public static string PadColour_Custom {
+            get {
+                return ResourceManager.GetString("PadColour_Custom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to White.
+        /// </summary>
+        public static string PadColour_White {
+            get {
+                return ResourceManager.GetString("PadColour_White", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Custom (Not Limited).
         /// </summary>
         public static string PaddingMode_Custom {
@@ -4017,7 +4059,7 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fill (pad to resolution limit).
+        ///   Looks up a localized string similar to Fill (Surround).
         /// </summary>
         public static string PaddingMode_Fill {
             get {
@@ -4026,7 +4068,7 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Height (pad up to res limit).
+        ///   Looks up a localized string similar to Height (Pillarbox).
         /// </summary>
         public static string PaddingMode_Height {
             get {
@@ -4044,7 +4086,7 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Width (pad up to res limit).
+        ///   Looks up a localized string similar to Width (Letterbox).
         /// </summary>
         public static string PaddingMode_Width {
             get {
@@ -4161,7 +4203,7 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Borders.
+        ///   Looks up a localized string similar to Borders:.
         /// </summary>
         public static string PictureSettingsView_Borders {
             get {
@@ -4278,11 +4320,20 @@ namespace HandBrakeWPF.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Padding Colour:.
+        ///   Looks up a localized string similar to Colour:.
         /// </summary>
         public static string PictureSettingsView_PaddingColour {
             get {
                 return ResourceManager.GetString("PictureSettingsView_PaddingColour", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RGB Value:.
+        /// </summary>
+        public static string PictureSettingsView_PaddingCustomColour {
+            get {
+                return ResourceManager.GetString("PictureSettingsView_PaddingCustomColour", resourceCulture);
             }
         }
         
@@ -6370,6 +6421,15 @@ namespace HandBrakeWPF.Properties {
         public static string SummaryView_NoTracks {
             get {
                 return ResourceManager.GetString("SummaryView_NoTracks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (padded).
+        /// </summary>
+        public static string SummaryView_Padded {
+            get {
+                return ResourceManager.GetString("SummaryView_Padded", resourceCulture);
             }
         }
         

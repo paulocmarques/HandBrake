@@ -15,6 +15,7 @@ namespace HandBrakeWPF
     using System.IO;
     using System.Linq;
     using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
 
@@ -72,7 +73,7 @@ namespace HandBrakeWPF
                 Application.Current.Shutdown();
                 return;
             }
-            
+
             if (e.Args.Any(f => f.Equals("--reset")))
             {
                 HandBrakeApp.ResetToDefaults();
@@ -117,6 +118,13 @@ namespace HandBrakeWPF
                     CultureInfo ci = new CultureInfo(language.Culture);
                     Thread.CurrentThread.CurrentUICulture = ci;
                 }
+            }
+
+            int oldOsWarningCount = userSettingService.GetUserSetting<int>(UserSettingConstants.OldOsWarning);
+            if (!SystemInfo.IsWindows10() && oldOsWarningCount < 2)
+            {
+                MessageBox.Show(HandBrakeWPF.Properties.Resources.OldOperatingSystem, HandBrakeWPF.Properties.Resources.Warning, MessageBoxButton.OK, MessageBoxImage.Warning);
+                userSettingService.SetUserSetting(UserSettingConstants.OldOsWarning, oldOsWarningCount + 1); // Only display once.
             }
 
             DarkThemeMode useDarkTheme = (DarkThemeMode)userSettingService.GetUserSetting<int>(UserSettingConstants.DarkThemeMode);
@@ -203,10 +211,15 @@ namespace HandBrakeWPF
         /// </param>
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Caliburn.Micro.Execute.OnUIThreadAsync(() => {
+            Execute.BeginOnUIThread(
+                () => 
+            {
                 if (e.ExceptionObject.GetType() == typeof(FileNotFoundException))
                 {
-                    GeneralApplicationException exception = new GeneralApplicationException("A file appears to be missing.", "Try re-installing Microsoft .NET Framework 4.8", (Exception)e.ExceptionObject);
+                    GeneralApplicationException exception = new GeneralApplicationException(
+                        "A file appears to be missing.",
+                        "Try re-installing Microsoft .NET 5 Desktop Runtime",
+                        (Exception)e.ExceptionObject);
                     this.ShowError(exception);
                 }
                 else
@@ -230,7 +243,7 @@ namespace HandBrakeWPF
         {
             if (e.Exception.GetType() == typeof(FileNotFoundException))
             {
-                GeneralApplicationException exception = new GeneralApplicationException("A file appears to be missing.", "Try re-installing Microsoft .NET Framework 4.7.1", e.Exception);
+                GeneralApplicationException exception = new GeneralApplicationException("A file appears to be missing.", "Try re-installing Microsoft .NET 5 Desktop Runtime", e.Exception);
                 this.ShowError(exception);
             }
             else if (e.Exception.GetType() == typeof(GeneralApplicationException))
@@ -290,7 +303,7 @@ namespace HandBrakeWPF
 
                     try
                     {
-                        windowManager.ShowDialog(errorView);
+                        windowManager.ShowDialogAsync(errorView);
                     }
                     catch (Exception)
                     {
@@ -303,8 +316,7 @@ namespace HandBrakeWPF
             }
             catch (Exception)
             {
-                MessageBox.Show("An Unknown Error has occurred. \n\n Exception:" + exception, "Unhandled Exception",
-                     MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("An Unknown Error has occurred. \n\n Exception:" + exception, "Unhandled Exception", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

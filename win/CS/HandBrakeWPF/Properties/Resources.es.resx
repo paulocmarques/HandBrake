@@ -112,10 +112,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Video_EncoderExtraArgs" xml:space="preserve">
     <value>Lista completa de parámetros del codificador: 
@@ -127,7 +127,7 @@
 Actívelo si a su dispositivo le cuesta reproducir la salida. (Por ej.: pierde cuadros)</value>
   </data>
   <data name="Video_LosslessWarning" xml:space="preserve">
-    <value>Advertencia: RF 0 es sin pérdida</value>
+    <value>Advertencia: RF 0 es sin pérdida!</value>
   </data>
   <data name="Video_LosslessWarningTooltip" xml:space="preserve">
     <value>Un valor de 0 significa sin pérdida y resultará en un tamaño de archivo más grande que el original,

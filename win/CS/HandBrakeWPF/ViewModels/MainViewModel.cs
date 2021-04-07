@@ -16,7 +16,9 @@ namespace HandBrakeWPF.ViewModels
     using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Text.Json;
     using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
 
@@ -49,8 +51,6 @@ namespace HandBrakeWPF.ViewModels
     using HandBrakeWPF.Utilities;
     using HandBrakeWPF.ViewModels.Interfaces;
     using HandBrakeWPF.Views;
-
-    using Newtonsoft.Json;
 
     using Ookii.Dialogs.Wpf;
 
@@ -748,8 +748,6 @@ namespace HandBrakeWPF.ViewModels
             }
         }
 
-        public bool IsUWP { get; } = UwpDetect.IsUWP();
-
         public string SourceInfo
         {
             get
@@ -926,7 +924,7 @@ namespace HandBrakeWPF.ViewModels
             else
             {
                 ILogViewModel logvm = IoC.Get<ILogViewModel>();
-                this.windowManager.ShowWindow(logvm);
+                this.windowManager.ShowWindowAsync(logvm);
             }
         }
 
@@ -944,7 +942,7 @@ namespace HandBrakeWPF.ViewModels
             }
             else
             {
-                this.windowManager.ShowWindow(IoC.Get<IQueueViewModel>());
+                this.windowManager.ShowWindowAsync(IoC.Get<IQueueViewModel>());
             }
         }
 
@@ -954,7 +952,7 @@ namespace HandBrakeWPF.ViewModels
             {
                 this.StaticPreviewViewModel.IsOpen = true;
                 this.StaticPreviewViewModel.UpdatePreviewFrame(this.CurrentTask, this.ScannedSource);
-                this.windowManager.ShowWindow(this.StaticPreviewViewModel);
+                this.windowManager.ShowWindowAsync(this.StaticPreviewViewModel);
             }
             else if (this.StaticPreviewViewModel.IsOpen)
             {
@@ -969,7 +967,7 @@ namespace HandBrakeWPF.ViewModels
             {
                 this.PresetManagerViewModel.IsOpen = true;
                 this.PresetManagerViewModel.SetupWindow(() => this.NotifyOfPropertyChange(() => this.PresetsCategories));
-                this.windowManager.ShowWindow(this.PresetManagerViewModel);
+                this.windowManager.ShowWindowAsync(this.PresetManagerViewModel);
             }
             else if (this.PresetManagerViewModel.IsOpen)
             {
@@ -1189,7 +1187,7 @@ namespace HandBrakeWPF.ViewModels
             }
             else
             {
-                this.windowManager.ShowWindow(viewModel);
+                this.windowManager.ShowWindowAsync(viewModel);
             }
         }
 
@@ -1333,7 +1331,7 @@ namespace HandBrakeWPF.ViewModels
                 return; 
             }
 
-            string json = JsonConvert.SerializeObject(this.ScannedSource, Formatting.Indented);
+            string json = JsonSerializer.Serialize(this.ScannedSource, JsonSettings.Options);
 
             SaveFileDialog savefiledialog = new SaveFileDialog
                                             {
@@ -1368,7 +1366,7 @@ namespace HandBrakeWPF.ViewModels
                     string json = reader.ReadToEnd();
                     if (!string.IsNullOrEmpty(json))
                     {
-                       Source source = JsonConvert.DeserializeObject<Source>(json);
+                       Source source = JsonSerializer.Deserialize<Source>(json, JsonSettings.Options);
                        this.ScannedSource = source;
                        this.HasSource = true;
                        this.SelectedTitle = this.ScannedSource.Titles.FirstOrDefault(t => t.MainTitle) ?? this.ScannedSource.Titles.FirstOrDefault();
@@ -1527,9 +1525,13 @@ namespace HandBrakeWPF.ViewModels
         {
             IAddPresetViewModel presetViewModel = IoC.Get<IAddPresetViewModel>();
             presetViewModel.Setup(this.CurrentTask, this.SelectedTitle, this.AudioViewModel.AudioBehaviours, this.SubtitleViewModel.SubtitleBehaviours);
-            this.windowManager.ShowDialog(presetViewModel);
+            Task<bool?> result = this.windowManager.ShowDialogAsync(presetViewModel);
 
-            this.NotifyOfPropertyChange(() => this.PresetsCategories);
+            if (result.Result.HasValue && result.Result.Value)
+            {
+                this.NotifyOfPropertyChange(() => this.PresetsCategories);
+                this.SelectedPreset = this.presetService.GetPreset(presetViewModel.PresetName);
+            }
         }
 
         public void PresetUpdate()
@@ -1579,7 +1581,7 @@ namespace HandBrakeWPF.ViewModels
 
             IManagePresetViewModel presetViewModel = IoC.Get<IManagePresetViewModel>();
             presetViewModel.Setup(this.selectedPreset);
-            this.windowManager.ShowDialog(presetViewModel);
+            this.windowManager.ShowDialogAsync(presetViewModel);
             Preset preset = presetViewModel.Preset;
 
             this.NotifyOfPropertyChange(() => this.PresetsCategories);

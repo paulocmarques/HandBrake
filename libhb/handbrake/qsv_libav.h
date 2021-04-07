@@ -333,6 +333,7 @@ typedef struct hb_qsv_context {
     int num_cpu_filters;
     int la_is_enabled;
     int qsv_filters_are_enabled;
+    int full_path_is_enabled;
     char *vpp_scale_mode;
     char *vpp_interpolation_method;
     char *qsv_device;
@@ -495,7 +496,7 @@ int hb_qsv_get_free_surface(hb_qsv_space *, hb_qsv_context *, mfxFrameInfo *,
 int hb_qsv_get_free_encode_task(hb_qsv_list *);
 
 int av_is_qsv_available(mfxIMPL, mfxVersion *);
-void hb_qsv_wait_on_sync(hb_qsv_context *, hb_qsv_stage *);
+int hb_qsv_wait_on_sync(hb_qsv_context *, hb_qsv_stage *);
 
 void hb_qsv_add_context_usage(hb_qsv_context *, int);
 

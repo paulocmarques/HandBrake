@@ -970,10 +970,15 @@ static void add_subtitle_for_lang(hb_value_array_t *list, hb_title_t *title,
         make_default = (!burn && behavior->make_default) ||
                        (!has_default_subtitle(list) &&
                         subtitle->config.default_track);
+
+        if (!behavior->one_burned || hb_subtitle_can_pass(subtitle->source, mux))
+        {
+            add_subtitle(list, t, make_default, 0 /*!force*/, burn, subtitle->name);
+        }
+
         behavior->burn_first &= !burn;
         behavior->one_burned |= burn;
         behavior->used[t] = 1;
-        add_subtitle(list, t, make_default, 0 /*!force*/, burn, subtitle->name);
     }
 }
 
@@ -1820,7 +1825,11 @@ int hb_preset_apply_video(const hb_dict_t *preset, hb_dict_t *job_dict)
         hb_dict_set(qsv, "AsyncDepth",
                     hb_value_xform(value, HB_VALUE_TYPE_INT));
     }
-
+    if ((value = hb_dict_get(preset, "VideoQSVAdapterIndex")) != NULL)
+    {
+        hb_dict_set(qsv, "AdapterIndex",
+                    hb_value_xform(value, HB_VALUE_TYPE_INT));
+    }
     return 0;
 }
 
